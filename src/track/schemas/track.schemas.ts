@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument } from "mongoose";
 import * as monoose from 'mongoose';
-import { User } from "../../auth/schemas/user.schemas";
+import { User } from "../../user/schemas/user.schemas";
 
 export type TrackDocument = HydratedDocument<Track>;
 
