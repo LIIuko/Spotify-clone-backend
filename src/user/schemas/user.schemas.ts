@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import * as monoose from "mongoose";
 import { HydratedDocument } from "mongoose";
-import * as monoose from 'mongoose';
 import { Track } from "../../track/schemas/track.schemas";
 
 export type UserDocument = HydratedDocument<User>;
@@ -15,7 +15,7 @@ export class User {
     password: string;
     @Prop()
     avatar: string;
-    @Prop({type: [{type: monoose.Schema.Types.ObjectId, ref: 'Track'}]})
+    @Prop({ type: [{ type: monoose.Schema.Types.ObjectId, ref: "Track" }] })
     tracks: Track[];
 }
 

@@ -5,39 +5,58 @@ import { Comment, CommentDocument } from "./schemas/comment.schema";
 import { Model, ObjectId } from "mongoose";
 import { CreateTrackDto } from "./dto/create-track.dto";
 import { CreateCommentDto } from "./dto/create-comment.dto";
+import { User, UserDocument } from "../user/schemas/user.schemas";
 
 @Injectable()
 export class TrackService {
+    constructor(
+        @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
+        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>
+    ) {
+    }
 
-    constructor(@InjectModel(Track.name) private trackModel: Model<TrackDocument>,
-        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>) { }
-
-    async create(dto: CreateTrackDto): Promise<Track> {
+    async create(user: UserDocument, dto: CreateTrackDto): Promise<Track> {
         const track = await this.trackModel.create({
-            ...dto, 
+            ...dto,
+            artist: user.id,
             listens: 0
         });
         return track;
     }
 
-    async getAll(): Promise<Track[]>{
+    async getAll(): Promise<Track[]> {
         const tracks = await this.trackModel.find();
         return tracks;
     }
 
     async getOne(id: ObjectId): Promise<Track> {
-        const track = await this.trackModel.findById(id);
+        const track = await this.trackModel.findById(id).populate([
+            {
+                path: "comments",
+                populate: {
+                    path: 'username',
+                    select: {username : 1},
+                }
+            },
+            {
+                path: "artist",
+                select: {username : 1}
+            }
+        ]);
         return track;
     }
 
-    async delete(id: ObjectId): Promise<ObjectId> {
-        const track = await this.trackModel.findByIdAndDelete(id);
+    async delete(user: UserDocument, id: ObjectId): Promise<ObjectId> {
+        const track = await this.trackModel.findOneAndDelete({_id: id, artist: user.id});
         return track.id;
     }
 
-    async addComment(dto: CreateCommentDto): Promise<Comment>{
+    async addComment(user: UserDocument, dto: CreateCommentDto): Promise<Comment> {
         const track = await this.trackModel.findById(dto.trackId);
-        const comment = await this.commentModel.create({...dto});
+        const comment = await this.commentModel.create({
+            ...dto,
+            username: user.id
+        });
         track.comments.push(comment.id);
         await track.save();
         return comment;
