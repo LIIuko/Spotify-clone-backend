@@ -4,12 +4,15 @@ import { JwtService } from "@nestjs/jwt";
 import { CreateUserDto } from "../user/dto/create-user.dto";
 import * as bcrypt from "bcryptjs";
 import { UserDocument } from "../user/schemas/user.schemas";
+import { FileType } from "../utils/file.type";
+import { FileService } from "../file/file.service";
 
 @Injectable()
 export class AuthService {
     constructor(
         private userService: UserService,
-        private jwtService: JwtService
+        private jwtService: JwtService,
+        private fileService: FileService
     ) {
     }
 
@@ -18,7 +21,7 @@ export class AuthService {
         return this.generateToken(user);
     }
 
-    async registration(dto: CreateUserDto) {
+    async registration(dto: CreateUserDto, avatar) {
         const candidate = await this.userService.getUserByEmail(dto.email);
         if (candidate) {
             throw new HttpException(
@@ -26,9 +29,11 @@ export class AuthService {
                 HttpStatus.BAD_REQUEST
             );
         }
+        const avatarPath: string = this.fileService.createFile(FileType.AVATAR, avatar);
         const hashPassword = await bcrypt.hash(dto.password, 5);
         const user = await this.userService.create({
             ...dto,
+            avatar: avatarPath,
             password: hashPassword
         });
         return this.generateToken(user);

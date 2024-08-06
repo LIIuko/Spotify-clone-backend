@@ -5,12 +5,13 @@ import {
     HttpStatus,
     Post,
     UseGuards,
-    Request
+    Request, UseInterceptors, UploadedFile
 } from "@nestjs/common";
 import { AuthGuard } from './auth.guard';
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from "../user/dto/create-user.dto";
 import { Public } from "./public.decorator";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller("/auth")
 export class AuthController {
@@ -26,9 +27,10 @@ export class AuthController {
 
     @Public()
     @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('avatar'))
     @Post("register")
-    registration(@Body() dto: CreateUserDto) {
-        return this.authService.registration(dto);
+    registration(@Body() dto: CreateUserDto, @UploadedFile() avatar: Express.Multer.File) {
+        return this.authService.registration(dto, avatar);
     }
 
     @UseGuards(AuthGuard)
